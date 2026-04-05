@@ -1,0 +1,71 @@
+---
+title: "User Identity"
+description: "How TelemetryDeck identifies users without collecting or storing personal data."
+---
+
+## Overview
+
+TelemetryDeck never stores or transmits raw user identifiers. All user IDs are hashed using SHA-256 before being sent to the server, making it impossible to recover the original identifier.
+
+## Automatic device-based ID
+
+By default, TelemetryDeck generates a stable identifier based on the app installation and device. No configuration is needed — the SDK handles this automatically on first launch.
+
+## Using your own user identifier
+
+If you have a meaningful identifier available (such as an email address or username), you can supply it during initialization:
+
+```swift
+// Set once during initialization
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+config.defaultUser = "user@example.com"
+TelemetryDeck.initialize(config: config)
+```
+
+<Tip>
+  Use email addresses or usernames — not numeric database IDs — as user identifiers. They're stable across devices and provide better cross-device de-duplication.
+</Tip>
+
+## Updating after login/logout
+
+You can update the default user identifier at any point after initialization:
+
+```swift
+// After user logs in
+TelemetryDeck.updateDefaultUserID(to: currentUser.email)
+
+// After user logs out (reverts to device-based ID)
+TelemetryDeck.updateDefaultUserID(to: nil)
+```
+
+## Per-signal user override
+
+To use a different user identifier for a single signal without changing the default, pass `customUserID` directly to `signal`:
+
+```swift
+TelemetryDeck.signal("Action.performed", customUserID: "specific-user@example.com")
+```
+
+## How hashing works
+
+1. The user identifier string is concatenated with the salt (if configured).
+2. The combined string is hashed with SHA-256 on-device.
+3. The resulting hash is sent to TelemetryDeck's servers.
+4. The server performs a second round of hashing with a server-side salt.
+
+This double-hashing means even TelemetryDeck cannot reverse the identifier back to the original email or username.
+
+## Custom salt
+
+For additional privacy, you can supply your own salt at initialization time:
+
+```swift
+let config = TelemetryDeck.Config(
+    appID: "YOUR-APP-ID",
+    salt: "a-random-string-of-at-least-64-chars"
+)
+```
+
+<Warning>
+  Once set, the salt must never change. Changing it causes all users to appear as new users in your analytics because their hashes will be different.
+</Warning>

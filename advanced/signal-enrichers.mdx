@@ -1,0 +1,77 @@
+---
+title: "Signal Enrichers"
+description: "Automatically attach dynamic metadata to every signal the SDK sends using custom enrichers."
+---
+
+## Overview
+
+Signal enrichers are objects that conform to the `SignalEnricher` protocol and automatically add key/value parameters to every signal the SDK sends. This is useful for attaching dynamic context like A/B test groups, feature flags, or user subscription state — without repeating that data on every `signal` call.
+
+## The SignalEnricher protocol
+
+```swift
+public protocol SignalEnricher: Sendable {
+    func enrich(
+        signalType: String,
+        for clientUser: String?,
+        floatValue: Double?
+    ) -> [String: String]
+}
+```
+
+Your enricher receives the signal name, the current client user identifier, and the optional float value. Return a dictionary of parameters to attach to the signal, or an empty dictionary to add nothing.
+
+## Creating a custom enricher
+
+```swift
+struct ExperimentEnricher: SignalEnricher {
+    func enrich(
+        signalType: String,
+        for clientUser: String?,
+        floatValue: Double?
+    ) -> [String: String] {
+        return [
+            "Experiment.group": ExperimentManager.shared.currentGroup,
+            "Experiment.variant": ExperimentManager.shared.variant
+        ]
+    }
+}
+```
+
+## Registering enrichers
+
+Pass your enrichers via the `metadataEnrichers` property on the config before calling `initialize`:
+
+```swift
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+config.metadataEnrichers = [ExperimentEnricher()]
+TelemetryDeck.initialize(config: config)
+```
+
+You can register multiple enrichers. Their outputs are merged in order.
+
+## Using signalType for conditional enrichment
+
+The `signalType` parameter lets you add parameters only to signals that match a certain pattern:
+
+```swift
+struct FeatureEnricher: SignalEnricher {
+    func enrich(
+        signalType: String,
+        for clientUser: String?,
+        floatValue: Double?
+    ) -> [String: String] {
+        // Only attach editor state for editor-related signals
+        guard signalType.hasPrefix("Editor.") else { return [:] }
+        return ["Editor.documentLength": String(EditorState.shared.documentLength)]
+    }
+}
+```
+
+<Tip>
+  Enrichers run synchronously on the thread that sends the signal. Keep enricher logic fast and avoid I/O. Cache computed values if needed.
+</Tip>
+
+<Note>
+  Enricher parameters are applied before `defaultParameters` from the config. If both an enricher and a `defaultParameters` closure return the same key, the `defaultParameters` value takes precedence.
+</Note>

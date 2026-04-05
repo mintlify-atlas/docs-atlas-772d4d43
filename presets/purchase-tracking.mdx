@@ -1,0 +1,96 @@
+---
+title: "Purchase Tracking"
+description: "Integrate with StoreKit 2 to automatically track purchases, free trials, trial conversions, and paywall views."
+---
+
+The TelemetryDeck SDK integrates with StoreKit 2 to automatically track purchases, free trials, and paywall views. Purchase signals include normalized pricing data and storefront metadata that maps to TelemetryDeck's built-in revenue insights.
+
+<Info>
+  This API requires StoreKit 2 (the Swift concurrency-based `Transaction` API). It is available on iOS 15+, macOS 12+, tvOS 15+, visionOS 1+, and watchOS 8+.
+</Info>
+
+## Tracking a completed purchase
+
+Call `purchaseCompleted(transaction:)` inside your StoreKit transaction listener after verifying a transaction. The SDK automatically determines whether the transaction is a free trial or a paid purchase and sends the appropriate signal.
+
+```swift
+import StoreKit
+import TelemetryDeck
+
+// In your purchase verification handler
+for await result in Transaction.updates {
+    if case .verified(let transaction) = result {
+        // Track the purchase
+        TelemetryDeck.purchaseCompleted(transaction: transaction)
+        await transaction.finish()
+    }
+}
+```
+
+The SDK automatically:
+
+- Detects whether the transaction is a free trial or a paid purchase
+- Converts the price to USD for normalized reporting
+- Sends `TelemetryDeck.Purchase.freeTrialStarted` or `TelemetryDeck.Purchase.completed`
+- Includes purchase type, storefront country code, product ID, and currency code
+
+### Trial conversion tracking
+
+When a free trial is detected, the SDK also starts monitoring for trial conversion. If the subscription later converts to a paid subscription, a `TelemetryDeck.Purchase.convertedFromTrial` signal is sent automatically — no additional code is required.
+
+## Tracking a paywall view
+
+Call `paywallShown(reason:)` whenever your paywall is presented to the user:
+
+```swift
+TelemetryDeck.paywallShown(reason: "feature-locked")
+```
+
+Common reason strings: `"trial-expired"`, `"feature-locked"`, `"onboarding"`, `"upsell"`
+
+## Parameters sent with purchase signals
+
+| Parameter | Description |
+|-----------|-------------|
+| `TelemetryDeck.Purchase.type` | `"subscription"` or `"one-time-purchase"` |
+| `TelemetryDeck.Purchase.countryCode` | Storefront country code |
+| `TelemetryDeck.Purchase.productID` | The product identifier from App Store Connect |
+| `TelemetryDeck.Purchase.currencyCode` | Currency code of the transaction |
+
+The `floatValue` of `TelemetryDeck.Purchase.completed` and `TelemetryDeck.Purchase.convertedFromTrial` signals is the transaction price converted to USD.
+
+<Note>
+  The SDK uses hardcoded exchange rates to convert non-USD prices to USD for the signal's float value. These rates may be out of date. The original currency code is included as a parameter, but the original price amount is not sent separately — only the converted USD float value is recorded.
+</Note>
+
+## API reference
+
+### `purchaseCompleted(transaction:parameters:customUserID:)`
+
+<ParamField path="transaction" type="StoreKit.Transaction" required>
+  The verified StoreKit 2 transaction. Pass the unwrapped value from a `.verified` result.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Additional metadata merged with the automatically collected purchase parameters. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="customUserID" type="String">
+  Overrides the default user identifier from the SDK configuration. Defaults to `nil`.
+</ParamField>
+
+---
+
+### `paywallShown(reason:parameters:customUserID:)`
+
+<ParamField path="reason" type="String" required>
+  The context or trigger for showing the paywall. Sent as `TelemetryDeck.Revenue.paywallShowReason`. Common values: `"trial-expired"`, `"feature-locked"`, `"onboarding"`, `"upsell"`.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Additional metadata to include with the signal. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="customUserID" type="String">
+  Overrides the default user identifier from the SDK configuration. Defaults to `nil`.
+</ParamField>

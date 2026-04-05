@@ -1,0 +1,80 @@
+---
+title: "Signal Parameters"
+description: "Attach metadata to signals using key/value parameters, default parameters, and parameter prefixes."
+---
+
+Parameters are `[String: String]` key/value pairs that attach metadata to a signal. Use them to record context about an event — such as the format of an export, the step of an onboarding flow, or whether a feature was enabled.
+
+## Custom parameters
+
+Pass a dictionary to any `signal` call to include event-specific metadata.
+
+```swift
+TelemetryDeck.signal("Export.completed", parameters: [
+    "format": "PDF",
+    "pageCount": "12",
+    "darkModeEnabled": "true"
+])
+```
+
+## Default parameters
+
+Default parameters are automatically attached to every signal your app sends. Configure them during initialization using a closure so that the values are evaluated at send time.
+
+```swift
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+config.defaultParameters = {
+    [
+        "userTier": currentUser.tier,
+        "experimentGroup": "A"
+    ]
+}
+TelemetryDeck.initialize(config: config)
+```
+
+## Default parameter prefix
+
+Apply a prefix to all parameter keys automatically — both default and per-signal parameters — to namespace them under your app name or domain.
+
+```swift
+config.defaultParameterPrefix = "MyApp."
+// All parameters are now prefixed: "MyApp.format", "MyApp.pageCount"
+```
+
+<Note>
+  Parameters that already start with `"TelemetryDeck."` are never prefixed, regardless of `defaultParameterPrefix`.
+</Note>
+
+## Automatic built-in parameters
+
+The SDK automatically attaches the following parameters to every signal. You do not need to set these yourself.
+
+| Parameter | Description |
+|-----------|-------------|
+| `TelemetryDeck.Accessibility.isBoldTextEnabled` | Whether bold text is enabled |
+| `TelemetryDeck.AppInfo.buildNumber` | App build number |
+| `TelemetryDeck.AppInfo.version` | App version string |
+| `TelemetryDeck.Device.architecture` | CPU architecture |
+| `TelemetryDeck.Device.modelName` | Device model name |
+| `TelemetryDeck.Device.operatingSystem` | OS name |
+| `TelemetryDeck.Device.platform` | Platform (iOS, macOS, etc.) |
+| `TelemetryDeck.Device.systemVersion` | Full OS version string |
+| `TelemetryDeck.RunContext.isDebug` | Whether running in debug mode |
+| `TelemetryDeck.RunContext.isSimulator` | Whether running in the simulator |
+| `TelemetryDeck.RunContext.isTestFlight` | Whether installed via TestFlight |
+| `TelemetryDeck.RunContext.isAppStore` | Whether installed from the App Store |
+| `TelemetryDeck.SDK.version` | TelemetryDeck SDK version |
+| `TelemetryDeck.UserPreference.colorScheme` | Light or dark mode preference |
+| `TelemetryDeck.UserPreference.region` | User's region setting |
+
+## Reserved parameter names
+
+<Warning>
+  Parameter keys prefixed with `"TelemetryDeck."` are reserved for internal SDK use. Setting them in your own parameters may cause unexpected behavior and will produce a console warning.
+</Warning>
+
+The following parameter names (and their lowercase equivalents) are also reserved and should not be used as custom parameter keys:
+
+`type`, `clientUser`, `appID`, `sessionID`, `floatValue`, `newSessionBegan`, `platform`, `systemVersion`, `majorSystemVersion`, `majorMinorSystemVersion`, `appVersion`, `buildNumber`, `isSimulator`, `isDebug`, `isTestFlight`, `isAppStore`, `modelName`, `architecture`, `operatingSystem`, `targetEnvironment`, `locale`, `region`, `appLanguage`, `preferredLanguage`, `telemetryClientVersion`
+
+The SDK logs a warning to the console if any of these keys are detected in your parameters.

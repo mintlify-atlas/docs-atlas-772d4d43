@@ -1,0 +1,67 @@
+---
+title: "Sessions"
+description: "How TelemetryDeck manages user sessions and tracks distinct usage periods."
+---
+
+## Overview
+
+Each signal includes a session ID — a UUID generated at app startup and updated when the app returns from the background. Sessions help TelemetryDeck count distinct usage periods across your user base.
+
+## Automatic session management
+
+The SDK handles session lifecycle automatically:
+
+- A new session ID is generated each time the app launches from cold storage.
+- On iOS, tvOS, and watchOS: the session ID updates whenever the app returns from the background after 5+ minutes of inactivity.
+- On macOS and other platforms: a new session ID is generated only on cold launch.
+- The `TelemetryDeck.Session.started` signal is sent automatically when a new session begins (configurable — see below).
+
+<Note>
+  The 5-minute background threshold applies to iOS, tvOS, and watchOS. The app must be backgrounded for at least 5 minutes before a new session is created on return to foreground.
+</Note>
+
+## Manual session control
+
+You can start a new session at any point in your app's lifecycle:
+
+```swift
+// Start a new session at a custom point in your app's lifecycle
+TelemetryDeck.generateNewSession()
+
+// Or write a UUID directly to the config
+TelemetryManager.shared.configuration.sessionID = UUID()
+```
+
+## Disabling automatic session signals
+
+If you don't want the SDK to automatically send a `TelemetryDeck.Session.started` signal at the beginning of each session, set `sendNewSessionBeganSignal` to `false` before initializing:
+
+```swift
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+config.sendNewSessionBeganSignal = false
+TelemetryDeck.initialize(config: config)
+```
+
+## Session statistics
+
+When `sessionStatsEnabled` is `true` (the default), the SDK tracks the following session data locally using `UserDefaults` and includes it as parameters on session signals:
+
+- Session duration in seconds
+- Total session count
+- Distinct days the app was used
+- First session date
+- Average session duration and previous session duration
+
+This data is privacy-preserving — it never leaves the device as raw values. It feeds TelemetryDeck's built-in session length and retention insights.
+
+To opt out:
+
+```swift
+config.sessionStatsEnabled = false
+```
+
+## New install detection
+
+On the very first session after installation (when no prior session data exists), the SDK automatically sends a `TelemetryDeck.Acquisition.newInstallDetected` signal. This signal includes a `TelemetryDeck.Acquisition.firstSessionDate` parameter with today's date.
+
+This happens automatically — no code required — and is suppressed if `sessionStatsEnabled` is `false`.

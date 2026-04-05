@@ -1,0 +1,77 @@
+---
+title: "Migration Guide"
+description: "How to migrate from the deprecated TelemetryManager API to the TelemetryDeck namespace."
+---
+
+## Overview
+
+The SDK has undergone API renaming. The old `TelemetryManager` static API is fully deprecated in favor of the `TelemetryDeck` namespace. All deprecated APIs still compile and function correctly — Xcode will surface them as warnings and offer fix-its for most cases.
+
+<Note>
+  All deprecated APIs still compile and work. Xcode will highlight them with warnings and offer fix-its. You can migrate gradually at your own pace.
+</Note>
+
+## API mapping
+
+| Old API (deprecated) | New API |
+|---|---|
+| `TelemetryManager.initialize(with:)` | `TelemetryDeck.initialize(config:)` |
+| `TelemetryManager.send(_:with:)` | `TelemetryDeck.signal(_:parameters:)` |
+| `TelemetryManager.terminate()` | `TelemetryDeck.terminate()` |
+| `TelemetryManager.requestImmediateSync()` | `TelemetryDeck.requestImmediateSync()` |
+| `TelemetryManager.updateDefaultUser(to:)` | `TelemetryDeck.updateDefaultUserID(to:)` |
+| `TelemetryManager.generateNewSession()` | `TelemetryDeck.generateNewSession()` |
+| `navigate(from:to:)` | `navigationPathChanged(from:to:)` |
+| `navigate(to:)` | `navigationPathChanged(to:)` |
+
+## Migrating initialization
+
+<CodeGroup>
+
+```swift Old (deprecated)
+let config = TelemetryManagerConfiguration(appID: "YOUR-APP-ID")
+TelemetryManager.initialize(with: config)
+```
+
+```swift New
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+TelemetryDeck.initialize(config: config)
+```
+
+</CodeGroup>
+
+`TelemetryDeck.Config` is a typealias for `TelemetryManagerConfiguration`, so the configuration type itself hasn't changed — only how you call `initialize`. Xcode provides a fix-it for this migration.
+
+## Migrating signal sending
+
+<CodeGroup>
+
+```swift Old (deprecated)
+TelemetryManager.send("MySignal", with: ["key": "value"])
+```
+
+```swift New
+TelemetryDeck.signal("MySignal", parameters: ["key": "value"])
+```
+
+</CodeGroup>
+
+Note the argument order change: the new API puts `parameters:` before `floatValue:` and `customUserID:`, while the old `send(_:for:floatValue:with:)` had a different order. Xcode cannot provide a fix-it for this — manual migration is required when using the full signature.
+
+## Migrating the import and library target
+
+The Swift Package Manager library product was renamed from `TelemetryClient` to `TelemetryDeck`. Update your SPM dependency target name accordingly. The old `TelemetryClient` target still exists for backward compatibility but re-exports `TelemetryDeck`.
+
+<CodeGroup>
+
+```swift Old import
+import TelemetryClient
+```
+
+```swift New import
+import TelemetryDeck
+```
+
+</CodeGroup>
+
+To update the target in your `Package.swift` or Xcode project, replace `TelemetryClient` with `TelemetryDeck` in your dependencies list. No other changes are required for this step.

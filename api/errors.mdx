@@ -1,0 +1,137 @@
+---
+title: "Error Tracking API"
+description: "Methods for reporting errors with structured metadata."
+---
+
+## errorOccurred(id:category:message:parameters:floatValue:customUserID:)
+
+```swift
+public static func errorOccurred(
+    id: String,
+    category: ErrorCategory? = nil,
+    message: String? = nil,
+    parameters: [String: String] = [:],
+    floatValue: Double? = nil,
+    customUserID: String? = nil
+)
+```
+
+Sends a `TelemetryDeck.Error.occurred` signal with structured error metadata.
+
+<ParamField body="id" type="String" required>
+  A stable identifier for the error type. Use dot notation: `"Network.timeoutError"`. Avoid dynamic values.
+</ParamField>
+
+<ParamField body="category" type="ErrorCategory?">
+  Categorizes the error for dashboard filtering. See `ErrorCategory` below.
+</ParamField>
+
+<ParamField body="message" type="String?">
+  Human-readable description of the error.
+</ParamField>
+
+<ParamField body="parameters" type="[String: String]">
+  Additional metadata about the error context.
+</ParamField>
+
+<ParamField body="floatValue" type="Double?">
+  Optional numeric value (e.g., an error code).
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal.
+</ParamField>
+
+---
+
+## errorOccurred(identifiableError:category:parameters:floatValue:customUserID:)
+
+```swift
+public static func errorOccurred(
+    identifiableError: IdentifiableError,
+    category: ErrorCategory = .thrownException,
+    parameters: [String: String] = [:],
+    floatValue: Double? = nil,
+    customUserID: String? = nil
+)
+```
+
+Sends a `TelemetryDeck.Error.occurred` signal using an `IdentifiableError`. The error's `localizedDescription` is sent as the message automatically.
+
+<ParamField body="identifiableError" type="IdentifiableError" required>
+  An error conforming to `IdentifiableError`. Use `.with(id:)` to conform any `Error`.
+</ParamField>
+
+<ParamField body="category" type="ErrorCategory">
+  Defaults to `.thrownException`.
+</ParamField>
+
+---
+
+## ErrorCategory
+
+```swift
+public enum ErrorCategory: String {
+    case thrownException = "thrown-exception"
+    case userInput       = "user-input"
+    case appState        = "app-state"
+}
+```
+
+| Case | Raw value | Use when |
+|------|-----------|----------|
+| `.thrownException` | `"thrown-exception"` | Error was thrown/caught as a Swift error |
+| `.userInput` | `"user-input"` | Error caused by invalid user input |
+| `.appState` | `"app-state"` | Error caused by the application's internal state |
+
+---
+
+## IdentifiableError
+
+`IdentifiableError` is a protocol that adds a stable `id: String` to any `Error`:
+
+```swift
+public protocol IdentifiableError: Error {
+    var id: String { get }
+}
+```
+
+Use the `.with(id:)` extension on `Error` to create an `AnyIdentifiableError` on the fly — without adding protocol conformance to your own error types:
+
+```swift
+enum NetworkError: Error {
+    case timeout
+    case serverError(Int)
+}
+
+// Wrap any Error with a stable ID
+TelemetryDeck.errorOccurred(
+    identifiableError: NetworkError.timeout.with(id: "Network.timeout"),
+    category: .appState
+)
+```
+
+### AnyIdentifiableError
+
+`AnyIdentifiableError` is the concrete type returned by `.with(id:)`. It wraps any `Error` and exposes its `localizedDescription` as the message sent with the signal.
+
+```swift
+public struct AnyIdentifiableError: LocalizedError, IdentifiableError {
+    public let id: String
+    public let error: any Error
+}
+
+extension Error {
+    public func with(id: String) -> AnyIdentifiableError
+}
+```
+
+---
+
+## Signal parameters sent
+
+| Parameter | Description |
+|-----------|-------------|
+| `TelemetryDeck.Error.id` | The error identifier |
+| `TelemetryDeck.Error.category` | The category raw value (if provided) |
+| `TelemetryDeck.Error.message` | The error message (if provided) |

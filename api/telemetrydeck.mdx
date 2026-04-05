@@ -1,0 +1,174 @@
+---
+title: "TelemetryDeck"
+description: "Core namespace with all primary SDK methods."
+---
+
+The `TelemetryDeck` enum is the primary namespace for all SDK functionality. All methods are static — no instance is required.
+
+## initialize(config:)
+
+```swift
+public static func initialize(config: TelemetryDeck.Config)
+```
+
+Initializes the SDK with the provided configuration. Call this once at app startup before sending any signals — typically in the `init()` of your `@main` App struct.
+
+<ParamField body="config" type="TelemetryDeck.Config" required>
+  Configuration object. `TelemetryDeck.Config` is a typealias for `TelemetryManagerConfiguration`.
+</ParamField>
+
+---
+
+## signal(\_:parameters:floatValue:customUserID:)
+
+```swift
+public static func signal(
+    _ signalName: String,
+    parameters: [String: String] = [:],
+    floatValue: Double? = nil,
+    customUserID: String? = nil
+)
+```
+
+Sends a telemetry signal to TelemetryDeck.
+
+<ParamField body="signalName" type="String" required>
+  The name of the signal. Use dot notation like `"Feature.action"`. Avoid the reserved `"TelemetryDeck."` prefix.
+</ParamField>
+
+<ParamField body="parameters" type="[String: String]">
+  Additional key/value metadata about the event. Merged with default parameters.
+</ParamField>
+
+<ParamField body="floatValue" type="Double?">
+  Optional numeric value associated with the signal. Useful for measurable quantities.
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal only. Hashed before sending.
+</ParamField>
+
+---
+
+## startDurationSignal(\_:parameters:includeBackgroundTime:)
+
+```swift
+@MainActor
+@available(watchOS 7.0, *)
+public static func startDurationSignal(
+    _ signalName: String,
+    parameters: [String: String] = [:],
+    includeBackgroundTime: Bool = false
+)
+```
+
+Starts timing a duration signal. Does not send a signal — call `stopAndSendDurationSignal` to finalize. If a duration signal with the same name is already running, it is replaced.
+
+<ParamField body="signalName" type="String" required>
+  Identifier used to match this start call with a later stop call.
+</ParamField>
+
+<ParamField body="parameters" type="[String: String]">
+  Parameters included when the signal is eventually sent.
+</ParamField>
+
+<ParamField body="includeBackgroundTime" type="Bool">
+  If `false` (default), the timer pauses when the app is backgrounded.
+</ParamField>
+
+---
+
+## stopAndSendDurationSignal(\_:parameters:floatValue:customUserID:)
+
+```swift
+@MainActor
+@available(watchOS 7.0, *)
+public static func stopAndSendDurationSignal(
+    _ signalName: String,
+    parameters: [String: String] = [:],
+    floatValue: Double? = nil,
+    customUserID: String? = nil
+)
+```
+
+Stops a duration timer and sends the signal. The duration in seconds is included as `TelemetryDeck.Signal.durationInSeconds`. If no matching start signal exists, does nothing.
+
+<ParamField body="signalName" type="String" required>
+  Must match the name passed to `startDurationSignal`.
+</ParamField>
+
+<ParamField body="parameters" type="[String: String]">
+  Merged with start parameters (stop parameters take precedence on key conflicts).
+</ParamField>
+
+<ParamField body="floatValue" type="Double?">
+  Optional numeric value for the signal.
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal.
+</ParamField>
+
+---
+
+## cancelDurationSignal(\_:)
+
+```swift
+@MainActor
+@available(watchOS 7.0, *)
+public static func cancelDurationSignal(_ signalName: String)
+```
+
+Cancels a running duration timer without sending a signal. If no matching timer exists, does nothing.
+
+<ParamField body="signalName" type="String" required>
+  The signal name passed to `startDurationSignal`.
+</ParamField>
+
+---
+
+## updateDefaultUserID(to:)
+
+```swift
+public static func updateDefaultUserID(to customUserID: String?)
+```
+
+Updates the default user identifier sent with all future signals. The identifier is hashed before use. Pass `nil` to revert to the automatic device-based identifier.
+
+<ParamField body="customUserID" type="String?">
+  The new default user identifier, or `nil` to clear it.
+</ParamField>
+
+---
+
+## generateNewSession()
+
+```swift
+public static func generateNewSession()
+```
+
+Generates a new session UUID. If `sendNewSessionBeganSignal` is `true` in the configuration, a `TelemetryDeck.Session.started` signal is sent automatically.
+
+---
+
+## requestImmediateSync()
+
+```swift
+public static func requestImmediateSync()
+```
+
+Requests an immediate upload of cached signals. Use sparingly — only at points where the user is about to leave your app for an extended period.
+
+<Warning>
+  Calling this after every `signal()` does not make data arrive faster and may double the number of network requests. The SDK batches and syncs signals automatically at appropriate times.
+</Warning>
+
+---
+
+## terminate()
+
+```swift
+public static func terminate()
+```
+
+Shuts down the SDK and deinitializes the `TelemetryManager`. Call `TelemetryDeck.initialize(config:)` again before sending further signals.

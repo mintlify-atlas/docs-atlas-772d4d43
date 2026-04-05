@@ -1,122 +1,92 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "TelemetryDeck Swift SDK",
+  "theme": "luma",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#f95b05",
+    "light": "#323439",
+    "dark": "#d4d7df"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/10388575-5969-4adb-9e73-3b0078e5e215.jpg",
+  "logo": {
+    "light": "https://media.brand.dev/1c471a72-56bf-45b6-b1cd-a6a02fb44d4f.svg",
+    "dark": "https://media.brand.dev/1c471a72-56bf-45b6-b1cd-a6a02fb44d4f.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/TelemetryDeck/SwiftSDK"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/TelemetryDeck/SwiftSDK"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "configuration"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Sending Signals",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "signals/basic-signals",
+              "signals/navigation-tracking",
+              "signals/duration-signals",
+              "signals/parameters"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Built-in Presets",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "presets/error-tracking",
+              "presets/purchase-tracking",
+              "presets/pirate-metrics"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Advanced",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "advanced/user-identity",
+              "advanced/sessions",
+              "advanced/signal-enrichers",
+              "advanced/privacy",
+              "advanced/migration"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Core API",
             "pages": [
-              "api-reference/introduction"
+              "api/telemetrydeck",
+              "api/configuration",
+              "api/signal-enricher"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Presets & Extensions",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/navigation",
+              "api/errors",
+              "api/purchases",
+              "api/pirate-metrics"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

@@ -1,0 +1,116 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "TelemetryDeck Swift SDK",
+  "projectDescription": "A privacy-conscious Swift SDK for sending analytics signals from iOS, macOS, watchOS, tvOS, and visionOS apps to TelemetryDeck.",
+  "theme": "luma",
+  "primaryColor": "#f95b05",
+  "lightColor": "#323439",
+  "darkColor": "#d4d7df",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "configuration"
+            ]
+          },
+          {
+            "group": "Sending Signals",
+            "pages": [
+              "signals/basic-signals",
+              "signals/navigation-tracking",
+              "signals/duration-signals",
+              "signals/parameters"
+            ]
+          },
+          {
+            "group": "Built-in Presets",
+            "pages": [
+              "presets/error-tracking",
+              "presets/purchase-tracking",
+              "presets/pirate-metrics"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/user-identity",
+              "advanced/sessions",
+              "advanced/signal-enrichers",
+              "advanced/privacy",
+              "advanced/migration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core API",
+            "pages": [
+              "api/telemetrydeck",
+              "api/configuration",
+              "api/signal-enricher"
+            ]
+          },
+          {
+            "group": "Presets & Extensions",
+            "pages": [
+              "api/navigation",
+              "api/errors",
+              "api/purchases",
+              "api/pirate-metrics"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Privacy-first analytics with hashed user identifiers",
+    "Simple signal-based API with TelemetryDeck.signal()",
+    "Automatic session tracking with foreground/background detection",
+    "SwiftUI view modifier for navigation tracking",
+    "StoreKit integration for purchase and trial tracking",
+    "AARRR pirate metrics presets (Acquisition, Activation, Referral, Revenue)",
+    "Duration signal tracking for measuring time on task",
+    "Custom metadata enrichers for adding dynamic signal parameters",
+    "Support for iOS, macOS, watchOS, tvOS, and visionOS",
+    "Configurable logging and custom server support"
+  ],
+  "publicApiSurface": [
+    "TelemetryDeck.initialize(config:)",
+    "TelemetryDeck.signal(_:parameters:floatValue:customUserID:)",
+    "TelemetryDeck.startDurationSignal(_:parameters:includeBackgroundTime:)",
+    "TelemetryDeck.stopAndSendDurationSignal(_:parameters:floatValue:customUserID:)",
+    "TelemetryDeck.cancelDurationSignal(_:)",
+    "TelemetryDeck.navigationPathChanged(from:to:customUserID:)",
+    "TelemetryDeck.navigationPathChanged(to:customUserID:)",
+    "TelemetryDeck.errorOccurred(id:category:message:parameters:floatValue:customUserID:)",
+    "TelemetryDeck.errorOccurred(identifiableError:category:parameters:floatValue:customUserID:)",
+    "TelemetryDeck.purchaseCompleted(transaction:parameters:customUserID:)",
+    "TelemetryDeck.paywallShown(reason:parameters:customUserID:)",
+    "TelemetryDeck.acquiredUser(channel:parameters:customUserID:)",
+    "TelemetryDeck.leadStarted(leadID:parameters:customUserID:)",
+    "TelemetryDeck.leadConverted(leadID:parameters:customUserID:)",
+    "TelemetryDeck.onboardingCompleted(parameters:customUserID:)",
+    "TelemetryDeck.coreFeatureUsed(featureName:parameters:customUserID:)",
+    "TelemetryDeck.referralSent(receiversCount:kind:parameters:customUserID:)",
+    "TelemetryDeck.userRatingSubmitted(rating:comment:parameters:customUserID:)",
+    "TelemetryDeck.updateDefaultUserID(to:)",
+    "TelemetryDeck.generateNewSession()",
+    "TelemetryDeck.requestImmediateSync()",
+    "TelemetryDeck.terminate()",
+    "TelemetryManagerConfiguration",
+    "SignalEnricher (protocol)",
+    "LogHandler",
+    "ErrorCategory",
+    "View.trackNavigation(path:)"
+  ]
+}

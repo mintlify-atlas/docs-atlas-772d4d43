@@ -1,0 +1,64 @@
+---
+title: "Navigation Tracking"
+description: "Track screen transitions and user navigation flows with built-in TelemetryDeck APIs."
+---
+
+TelemetryDeck has built-in support for tracking navigation between screens. Every navigation event records a source path and a destination path, letting you visualize how users move through your app.
+
+There are two approaches: a **SwiftUI view modifier** (recommended) and a **direct API** for UIKit or manual control.
+
+<Info>
+  Available on iOS 13+, macOS 10.15+, tvOS 13+, and watchOS 6+.
+</Info>
+
+## SwiftUI modifier (recommended)
+
+Apply `.trackNavigation(path:)` to any view. The modifier fires a navigation signal automatically when the view appears.
+
+```swift
+struct AppTabView: View {
+    var body: some View {
+        TabView {
+            HomeView()
+                .trackNavigation(path: "home")
+                .tabItem { Text("Home") }
+
+            StoreView()
+                .trackNavigation(path: "store.browse")
+                .tabItem { Text("Store") }
+
+            ProfileView()
+                .trackNavigation(path: "profile")
+                .tabItem { Text("Profile") }
+        }
+    }
+}
+```
+
+## Direct API (UIKit or manual tracking)
+
+Use `navigationPathChanged` when you control navigation imperatively or when working in UIKit.
+
+```swift
+// When you know both the source and destination
+TelemetryDeck.navigationPathChanged(from: "home", to: "settings.account")
+
+// When relying on automatic source tracking
+TelemetryDeck.navigationPathChanged(to: "settings.account")
+```
+
+## Navigation path conventions
+
+- Use `.` or `/` as hierarchy delimiters: `"settings.profile"`, `"/blog/ios-tips"`.
+- Use an empty string `""` to represent navigation from outside the app (cold launch).
+- **Keep paths generic** — never embed user IDs or other dynamic data in paths.
+  - Good: `"store.items.detail"`
+  - Bad: `"store.items.item-123"`
+
+## How automatic source tracking works
+
+When you call `navigationPathChanged(to:)`, the SDK automatically uses the previously recorded destination as the source for the new event. This means you don't need to pass the source explicitly in most cases.
+
+<Warning>
+  Automatic source tracking only works correctly if you track navigation on **every** screen. If a user visits Home → (untracked) User → Settings, TelemetryDeck records Home → Settings, skipping the intermediate step entirely. Apply `.trackNavigation(path:)` consistently across all navigation destinations to avoid inaccurate path data.
+</Warning>

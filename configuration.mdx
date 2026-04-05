@@ -1,0 +1,114 @@
+---
+title: "Configuration"
+description: "Customize the TelemetryDeck Swift SDK with TelemetryManagerConfiguration — control user identifiers, logging, session tracking, opt-out behavior, and more."
+---
+
+## Overview
+
+`TelemetryDeck.Config` is a typealias for `TelemetryManagerConfiguration`. You create one instance, adjust any properties you need, then pass it to `TelemetryDeck.initialize(config:)` at startup.
+
+```swift
+public init(appID: String, salt: String? = nil, baseURL: URL? = nil, namespace: String? = nil)
+```
+
+After initialization you can continue to mutate most properties on the configuration object and the SDK will pick up the changes immediately.
+
+## Properties
+
+<ParamField body="telemetryAppID" type="String" required>
+  Your app's unique identifier from the TelemetryDeck dashboard. Retrieve it under **Set Up App** after signing in.
+</ParamField>
+
+<ParamField body="salt" type="String">
+  A string appended to all user identifiers before they are hashed. Set this once to a random 64-character string for extra privacy. Passed via the initializer: `TelemetryDeck.Config(appID:salt:)`.
+
+  <Warning>
+    Once you set `salt`, do not change it. Changing the salt causes all existing users to appear as new users in your analytics.
+  </Warning>
+</ParamField>
+
+<ParamField body="defaultUser" type="String?">
+  Default user identifier sent with every signal. The value is hashed on-device before transmission — TelemetryDeck never receives the raw string. Set this to override the automatically generated device-based identifier. Set to `nil` to revert to the default.
+</ParamField>
+
+<ParamField body="defaultSignalPrefix" type="String?">
+  A string automatically prepended to every signal name. Useful when you want a consistent namespace across all signals without repeating it at every call site.
+</ParamField>
+
+<ParamField body="defaultParameterPrefix" type="String?">
+  A string automatically prepended to every parameter key. Applied to both per-signal parameters and `defaultParameters`, unless the key already starts with `TelemetryDeck.`.
+</ParamField>
+
+<ParamField body="defaultParameters" type="() -> [String: String]">
+  A closure returning a dictionary of parameters to attach to every signal. Evaluated each time a signal is sent, so you can return dynamic values. If `defaultParameterPrefix` is set, it is also applied to keys returned here.
+</ParamField>
+
+<ParamField body="sessionID" type="UUID">
+  The identifier for the current session. The SDK generates a new UUID at initialization and automatically rotates it when the app returns from background (on iOS, tvOS, and watchOS after five minutes). Write a new `UUID()` to this property to begin a new session manually.
+</ParamField>
+
+<ParamField body="sendNewSessionBeganSignal" type="Bool" default="true">
+  When `true`, the SDK automatically sends a `TelemetryDeck.Session.started` signal each time `sessionID` changes. Set to `false` to suppress this automatic signal.
+</ParamField>
+
+<ParamField body="testMode" type="Bool">
+  When `true`, all signals are marked as testing signals. Testing signals are only visible in the dashboard when Test Mode is active and are excluded from live analytics. Defaults to `true` in `DEBUG` builds and `false` in release builds. You can override this value manually.
+</ParamField>
+
+<ParamField body="analyticsDisabled" type="Bool" default="false">
+  When `true`, no signals are sent. Use this to implement a user-facing opt-out toggle. Works independently of `swiftUIPreviewMode` — if either is `true`, no signals are sent.
+</ParamField>
+
+<ParamField body="swiftUIPreviewMode" type="Bool">
+  When `true`, no signals are sent. Automatically detected from the `XCODE_RUNNING_FOR_PREVIEWS` environment variable, so SwiftUI canvas previews never generate analytics events. You can override the value manually if needed.
+</ParamField>
+
+<ParamField body="logHandler" type="LogHandler?" default="LogHandler.standard(.info)">
+  Controls how the SDK emits log messages. The default handler writes to `OSLog` at the info and error levels. Set to `nil` to disable all SDK logging. You can supply a custom closure to forward logs to your own logging system.
+</ParamField>
+
+<ParamField body="metadataEnrichers" type="[SignalEnricher]" default="[]">
+  An array of objects conforming to `SignalEnricher` that can add or modify metadata on signals as they are recorded. Evaluated in order for each signal.
+</ParamField>
+
+<ParamField body="urlSession" type="URLSession" default="URLSession.shared">
+  The `URLSession` instance used for all network requests. Override to apply custom configurations such as additional HTTP headers, a background session, or a proxy.
+</ParamField>
+
+<ParamField body="sessionStatsEnabled" type="Bool" default="true">
+  When `true`, the SDK automatically tracks basic session length and count statistics in a privacy-preserving manner, writing to `UserDefaults` approximately once per second. Set to `false` if you want to opt out of this behavior.
+</ParamField>
+
+<ParamField body="reservedParameterWarningsEnabled" type="Bool" default="true">
+  When `true`, the SDK logs an error if you send a signal or parameter whose name conflicts with a reserved TelemetryDeck key. Disable only if you are building a TelemetryDeck-compatible SDK and handle reserved-key validation yourself.
+</ParamField>
+
+## Full configuration example
+
+```swift
+let config = TelemetryDeck.Config(
+    appID: "YOUR-APP-ID",
+    salt: "a-random-64-char-string"
+)
+config.defaultUser = currentUser?.email
+config.defaultParameters = {
+    ["App.isPremiumUser": String(currentUser?.isPremium ?? false)]
+}
+config.logHandler = LogHandler(logLevel: .error) { level, message in
+    myLogger.log(level: .error, "\(message)")
+}
+TelemetryDeck.initialize(config: config)
+```
+
+## Custom server
+
+A small number of users route signals through their own proxy or a self-hosted ingestion server. Pass the server URL via the initializer:
+
+```swift
+let config = TelemetryDeck.Config(
+    appID: "YOUR-APP-ID",
+    baseURL: URL(string: "https://your-proxy.example.com")!
+)
+```
+
+The `baseURL` defaults to `https://nom.telemetrydeck.com` when not specified.

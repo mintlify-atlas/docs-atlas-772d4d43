@@ -1,0 +1,88 @@
+---
+title: "Sending Signals"
+description: "Record named events in your app using TelemetryDeck.signal()."
+---
+
+Signals are the core primitive of TelemetryDeck. A signal represents a named event that occurred in your app, with optional key/value parameters and an optional numeric value.
+
+## Basic signal
+
+```swift
+TelemetryDeck.signal("App.launchedRegularly")
+```
+
+## Signal with parameters
+
+Attach additional context as a `[String: String]` dictionary.
+
+```swift
+TelemetryDeck.signal("Database.updated", parameters: ["numberOfEntries": "3831"])
+```
+
+## Signal with a float value
+
+Use `floatValue` to associate a numeric measurement with a signal — for example, a duration, a count, or a score.
+
+```swift
+TelemetryDeck.signal("Search.completed", floatValue: 42.0)
+```
+
+## Signal with a custom user ID
+
+Override the default user identifier for a single signal. The value is hashed on-device before sending.
+
+```swift
+TelemetryDeck.signal("Profile.updated", customUserID: "user@example.com")
+```
+
+## Full signature
+
+```swift
+TelemetryDeck.signal(
+    _ signalName: String,
+    parameters: [String: String] = [:],
+    floatValue: Double? = nil,
+    customUserID: String? = nil
+)
+```
+
+### Parameters
+
+<ParamField path="signalName" type="String" required>
+  The name of the event. Use dot notation such as `"Feature.action"` (e.g., `"App.launchedRegularly"`, `"Settings.darkModeEnabled"`). The `"TelemetryDeck."` prefix is reserved for internal SDK signals.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Additional key/value metadata to attach to the signal. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="floatValue" type="Double?">
+  An optional numeric value associated with the signal. Useful for measurements, counts, or scores.
+</ParamField>
+
+<ParamField path="customUserID" type="String?">
+  Overrides the default user identifier for this signal only. The value is hashed on-device before leaving the device and is never transmitted in plain text.
+</ParamField>
+
+## Signal naming conventions
+
+- **Use dot notation** to express hierarchy: `"Category.Action"` — for example, `"App.launchedRegularly"` or `"Settings.darkModeEnabled"`.
+- **Avoid spaces and special characters** in signal names.
+- **Keep names generic** — never embed dynamic user data, IDs, or personally identifiable information in signal names. Put that kind of data in `parameters` instead.
+- **The `"TelemetryDeck."` prefix is reserved** for built-in SDK signals. Using it in your own signal names will produce a console warning and may cause unexpected behavior.
+
+## Automatic signal syncing
+
+The SDK automatically batches and sends signals in the background — you don't need to manage this manually.
+
+<Warning>
+  Call `TelemetryDeck.requestImmediateSync()` sparingly, and only at moments when the user is about to leave your app and unlikely to return soon (for example, after a purchase or on app termination). Calling it after every signal will not make data arrive faster and may increase network usage.
+</Warning>
+
+To shut down the SDK and release resources — for example, when logging a user out or running unit tests — call:
+
+```swift
+TelemetryDeck.terminate()
+```
+
+After calling `terminate()`, you must call `TelemetryDeck.initialize(config:)` again before sending further signals.

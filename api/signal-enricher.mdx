@@ -1,0 +1,82 @@
+---
+title: "SignalEnricher"
+description: "Protocol for adding dynamic metadata to every signal automatically."
+---
+
+`SignalEnricher` is a protocol your types can conform to in order to automatically attach key/value parameters to every signal the SDK sends. Register enrichers via `config.metadataEnrichers`.
+
+## Protocol definition
+
+```swift
+public protocol SignalEnricher: Sendable {
+    func enrich(
+        signalType: String,
+        for clientUser: String?,
+        floatValue: Double?
+    ) -> [String: String]
+}
+```
+
+## Method parameters
+
+<ParamField body="signalType" type="String">
+  The name of the signal being sent (e.g., `"App.launchedRegularly"`).
+</ParamField>
+
+<ParamField body="clientUser" type="String?">
+  The user identifier for this signal, before hashing.
+</ParamField>
+
+<ParamField body="floatValue" type="Double?">
+  The float value of the signal, if one was provided.
+</ParamField>
+
+**Returns** `[String: String]` — parameters to merge into the signal. Return an empty dictionary to add nothing.
+
+## Implementing an enricher
+
+```swift
+struct SubscriptionEnricher: SignalEnricher {
+    func enrich(
+        signalType: String,
+        for clientUser: String?,
+        floatValue: Double?
+    ) -> [String: String] {
+        return [
+            "App.subscriptionTier": StoreManager.shared.tier,
+            "App.isPremium": String(StoreManager.shared.isPremium)
+        ]
+    }
+}
+```
+
+### Conditional enrichment by signal type
+
+```swift
+struct EditorEnricher: SignalEnricher {
+    func enrich(
+        signalType: String,
+        for clientUser: String?,
+        floatValue: Double?
+    ) -> [String: String] {
+        guard signalType.hasPrefix("Editor.") else { return [:] }
+        return ["Editor.documentLength": String(EditorState.shared.length)]
+    }
+}
+```
+
+## Registering enrichers
+
+```swift
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+config.metadataEnrichers = [SubscriptionEnricher(), EditorEnricher()]
+TelemetryDeck.initialize(config: config)
+```
+
+<Tip>
+  Enrichers run synchronously on the thread that sends the signal. Keep `enrich` fast — avoid blocking I/O. Cache computed values rather than recalculating on every call.
+</Tip>
+
+<Note>
+  Because `SignalEnricher` inherits from `Sendable`, your conforming types must be safe for concurrent use. Use value types (structs) or ensure thread-safe access for reference types.
+</Note>

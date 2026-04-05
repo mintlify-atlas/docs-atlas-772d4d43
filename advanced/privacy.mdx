@@ -1,0 +1,64 @@
+---
+title: "Privacy & Compliance"
+description: "TelemetryDeck's built-in privacy protections and how to comply with GDPR, CCPA, and Apple's App Store requirements."
+---
+
+## Overview
+
+TelemetryDeck is designed for privacy-conscious analytics. The SDK is built on several privacy principles that minimize data collection and protect your users by default.
+
+## What TelemetryDeck does NOT collect
+
+- **Raw user identifiers** — all are hashed with SHA-256 before transmission.
+- **IP addresses** — stripped at the ingestion layer before any data is stored.
+- **Location data** — no GPS, region, or location signals are collected.
+- **Personal information of any kind** — names, emails, and other PII never leave the device in readable form.
+
+## Hashed user identifiers
+
+User IDs are hashed on-device before being sent. The server applies a second hash with a server-side salt. Because hashing is one-way, neither TelemetryDeck nor you can recover the original identifier from the data stored on the server.
+
+See [User Identity](/advanced/user-identity) for details on how hashing works and how to configure a custom salt.
+
+## Opting users out
+
+You can disable all signal sending entirely:
+
+```swift
+// Disable before initialization (in the config)
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+config.analyticsDisabled = true
+TelemetryDeck.initialize(config: config)
+
+// Or dynamically at runtime, based on user consent
+TelemetryManager.shared.configuration.analyticsDisabled = !userHasConsented
+```
+
+Once set to `true`, no signals are sent until it is set back to `false`.
+
+<Tip>
+  If your app targets regions covered by GDPR or CCPA, you may want to call `TelemetryDeck.initialize(config:)` only after user consent, or set `analyticsDisabled = true` until consent is granted.
+</Tip>
+
+## SwiftUI preview mode
+
+Signals are automatically suppressed during Xcode SwiftUI previews. The SDK detects the `XCODE_RUNNING_FOR_PREVIEWS` environment variable and skips all signal sending, so preview renders never pollute your analytics.
+
+## Debug / test mode
+
+Debug builds automatically send signals marked as "testing" so they don't pollute production analytics. These are visible in the TelemetryDeck dashboard only when **Test Mode** is activated.
+
+You can override this behavior manually:
+
+```swift
+config.testMode = true  // Force test mode regardless of build configuration
+config.testMode = false // Force production mode even in debug builds
+```
+
+## PrivacyInfo.xcprivacy
+
+The SDK ships with a `PrivacyInfo.xcprivacy` file declaring its data usage in Apple's Privacy Manifest format, meeting App Store requirements introduced in Xcode 15.
+
+## App Store privacy questionnaire
+
+TelemetryDeck does not collect data that you need to disclose as "data linked to the user" in Apple's App Store privacy label, because all identifiers are hashed before leaving the device and cannot be reversed.

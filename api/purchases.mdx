@@ -1,0 +1,104 @@
+---
+title: "Purchase Tracking API"
+description: "StoreKit integration methods for tracking purchases, trials, and paywalls."
+---
+
+<Info>
+  Purchase tracking requires StoreKit 2. Available on iOS 15+, macOS 12+, tvOS 15+, visionOS 1+, watchOS 8+.
+</Info>
+
+## purchaseCompleted(transaction:parameters:customUserID:)
+
+```swift
+@available(iOS 15, macOS 12, tvOS 15, visionOS 1, watchOS 8, *)
+public static func purchaseCompleted(
+    transaction: StoreKit.Transaction,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Tracks a completed StoreKit transaction. Automatically detects whether it is a free trial or a paid purchase and sends the appropriate signal.
+
+<ParamField body="transaction" type="StoreKit.Transaction" required>
+  The verified `StoreKit.Transaction` from `Transaction.updates` or `Transaction.currentEntitlements`.
+</ParamField>
+
+<ParamField body="parameters" type="[String: String]">
+  Additional metadata merged with the automatically extracted purchase parameters.
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal.
+</ParamField>
+
+### Signals sent
+
+| Condition | Signal name |
+|-----------|-------------|
+| Auto-renewable subscription with free introductory offer | `TelemetryDeck.Purchase.freeTrialStarted` |
+| All other transactions | `TelemetryDeck.Purchase.completed` |
+| Free trial later converts to paid subscription | `TelemetryDeck.Purchase.convertedFromTrial` |
+
+The `floatValue` of `TelemetryDeck.Purchase.completed` and `TelemetryDeck.Purchase.convertedFromTrial` is the transaction price converted to USD.
+
+<Note>
+  `TelemetryDeck.Purchase.convertedFromTrial` is sent automatically — no additional code is needed. After a free trial is detected, the SDK monitors subsequent transactions for the same product and sends this signal when the subscription converts to paid.
+</Note>
+
+### Parameters included automatically
+
+| Parameter | Description |
+|-----------|-------------|
+| `TelemetryDeck.Purchase.type` | `"subscription"` or `"one-time-purchase"` |
+| `TelemetryDeck.Purchase.countryCode` | Storefront country code |
+| `TelemetryDeck.Purchase.productID` | The App Store product identifier |
+| `TelemetryDeck.Purchase.currencyCode` | Transaction currency code |
+
+### Example
+
+```swift
+for await result in Transaction.updates {
+    if case .verified(let transaction) = result {
+        TelemetryDeck.purchaseCompleted(transaction: transaction)
+        await transaction.finish()
+    }
+}
+```
+
+---
+
+## paywallShown(reason:parameters:customUserID:)
+
+```swift
+public static func paywallShown(
+    reason: String,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Revenue.paywallShown` when a paywall is displayed to the user.
+
+<ParamField body="reason" type="String" required>
+  The context for showing the paywall. Common values: `"trial-expired"`, `"feature-locked"`, `"onboarding"`, `"upsell"`.
+</ParamField>
+
+<ParamField body="parameters" type="[String: String]">
+  Additional metadata about the paywall context.
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal.
+</ParamField>
+
+### Example
+
+```swift
+func showPaywall(for feature: Feature) {
+    TelemetryDeck.paywallShown(reason: "feature-locked", parameters: [
+        "featureName": feature.name
+    ])
+    presentPaywallViewController()
+}
+```

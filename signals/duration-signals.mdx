@@ -1,0 +1,104 @@
+---
+title: "Duration Signals"
+description: "Measure how long users spend in a feature or task using start/stop duration tracking."
+---
+
+Duration signals let you measure how long a user spends on a specific feature, screen, or task. The SDK tracks **foreground time only** by default — the timer is automatically paused when the app backgrounds and resumed when it returns to the foreground.
+
+<Note>
+  Duration signal methods are `@MainActor` and must be called on the main actor. They are available on **watchOS 7.0+** and all other supported platforms.
+</Note>
+
+## Basic usage
+
+```swift
+// Start tracking when a feature begins
+TelemetryDeck.startDurationSignal("Feature.editing")
+
+// Send the signal when done
+TelemetryDeck.stopAndSendDurationSignal("Feature.editing")
+```
+
+When the signal is sent, TelemetryDeck automatically includes a `TelemetryDeck.Signal.durationInSeconds` parameter containing the measured duration.
+
+## With parameters
+
+You can attach parameters at both start and stop time. Parameters from both calls are merged when the signal is sent, with stop-time parameters taking precedence over start-time parameters if keys conflict.
+
+```swift
+// Start with initial context
+TelemetryDeck.startDurationSignal(
+    "Onboarding.step",
+    parameters: ["stepName": "profile-setup"]
+)
+
+// Stop with additional context — parameters are merged
+TelemetryDeck.stopAndSendDurationSignal(
+    "Onboarding.step",
+    parameters: ["completionStatus": "skipped"]
+)
+```
+
+## Including background time
+
+By default, background time is excluded. Pass `includeBackgroundTime: true` to measure wall-clock time instead.
+
+```swift
+TelemetryDeck.startDurationSignal(
+    "AudioPlayback.session",
+    includeBackgroundTime: true
+)
+```
+
+## Cancelling a duration signal
+
+Call `cancelDurationSignal` to discard a running timer without sending any data.
+
+```swift
+// User disabled analytics mid-session — discard without sending
+TelemetryDeck.cancelDurationSignal("Feature.editing")
+```
+
+If no matching start signal was found, `cancelDurationSignal` does nothing.
+
+## API reference
+
+### `startDurationSignal(_:parameters:includeBackgroundTime:)`
+
+<ParamField path="signalName" type="String" required>
+  Identifier for this duration measurement. Used to match this call with the corresponding `stopAndSendDurationSignal` or `cancelDurationSignal` call.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Initial parameters to attach to the signal. These are stored and merged with any stop-time parameters when the signal is sent. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="includeBackgroundTime" type="Bool" default="false">
+  When `false` (the default), time spent while the app is backgrounded is excluded from the measurement. Set to `true` to count wall-clock time including background periods.
+</ParamField>
+
+### `stopAndSendDurationSignal(_:parameters:floatValue:customUserID:)`
+
+<ParamField path="signalName" type="String" required>
+  Must exactly match the name used in the corresponding `startDurationSignal` call.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Additional parameters merged with the start-time parameters. Stop-time parameters take precedence when keys conflict. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="floatValue" type="Double?">
+  An optional numeric value to include with the signal, in addition to the automatic duration parameter.
+</ParamField>
+
+<ParamField path="customUserID" type="String?">
+  Overrides the default user identifier for this signal only. Hashed on-device before sending.
+</ParamField>
+
+## Behavior notes
+
+<Note>
+  The sent signal always includes a `TelemetryDeck.Signal.durationInSeconds` parameter with the measured duration rounded down to 3 decimal places. If no matching start signal was found when `stopAndSendDurationSignal` is called, the method does nothing and no signal is sent.
+</Note>
+
+If `startDurationSignal` is called while a signal with the same name is already running, the old timer is discarded and replaced with a new one starting from the current time.

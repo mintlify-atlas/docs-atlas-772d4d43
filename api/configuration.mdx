@@ -1,0 +1,168 @@
+---
+title: "TelemetryManagerConfiguration"
+description: "Configuration object for the TelemetryDeck SDK."
+---
+
+`TelemetryDeck.Config` is a typealias for `TelemetryManagerConfiguration`. Create one instance, customize its properties, then pass it to `TelemetryDeck.initialize(config:)`.
+
+## Constructor
+
+```swift
+public init(appID: String, salt: String? = nil, baseURL: URL? = nil, namespace: String? = nil)
+```
+
+<ParamField body="appID" type="String" required>
+  Your application's unique identifier from the TelemetryDeck dashboard.
+</ParamField>
+
+<ParamField body="salt" type="String?">
+  A string appended to user identifiers before hashing. Set once; never change after deployment.
+</ParamField>
+
+<ParamField body="baseURL" type="URL?">
+  Custom ingestion server URL. Defaults to `https://nom.telemetrydeck.com`.
+</ParamField>
+
+<ParamField body="namespace" type="String?">
+  Optional namespace for segregating signals. Do not set unless instructed by TelemetryDeck.
+</ParamField>
+
+## Properties
+
+<ParamField body="telemetryAppID" type="String">
+  Read-only. The App ID provided at initialization.
+</ParamField>
+
+<ParamField body="apiBaseURL" type="URL">
+  Read-only. The ingestion server URL. Defaults to `https://nom.telemetrydeck.com`.
+</ParamField>
+
+<ParamField body="salt" type="String">
+  Read-only. Salt used during user identifier hashing.
+
+  <Warning>
+    Once set, do not change the salt. Changing it makes all existing users appear as new users in your analytics.
+  </Warning>
+</ParamField>
+
+<ParamField body="defaultUser" type="String?">
+  Default user identifier sent with every signal. The value is hashed before transmission. Set to `nil` to use the automatic device-based identifier.
+</ParamField>
+
+<ParamField body="defaultSignalPrefix" type="String?">
+  A string prepended to all signal names automatically. For example, setting `"MyApp."` means calling `signal("Launch")` sends `"MyApp.Launch"`.
+</ParamField>
+
+<ParamField body="defaultParameterPrefix" type="String?">
+  A string prepended to all parameter keys automatically. Does not apply to keys already starting with `"TelemetryDeck."`.
+</ParamField>
+
+<ParamField body="defaultParameters" type="@Sendable () -> [String: String]">
+  A closure returning parameters attached to every signal. Evaluated each time a signal is sent. Defaults to returning an empty dictionary.
+
+  ```swift
+  config.defaultParameters = {
+      ["userTier": UserManager.shared.tier]
+  }
+  ```
+</ParamField>
+
+<ParamField body="sendNewSessionBeganSignal" type="Bool">
+  If `true` (default), sends `TelemetryDeck.Session.started` automatically when the session ID changes.
+</ParamField>
+
+<ParamField body="sessionID" type="UUID">
+  The current session identifier. Setting this property starts a new session and may trigger a session-started signal.
+</ParamField>
+
+<ParamField body="urlSession" type="URLSession">
+  The URLSession used for network requests. Defaults to `URLSession.shared`. Override to inject custom network configurations or for testing.
+</ParamField>
+
+<ParamField body="testMode" type="Bool">
+  If `true`, signals are marked as test signals visible only in Test Mode on the dashboard. Defaults to `true` in `DEBUG` builds, `false` in release builds.
+</ParamField>
+
+<ParamField body="analyticsDisabled" type="Bool">
+  If `true`, no signals are sent. Use this to implement user opt-out. Defaults to `false`.
+</ParamField>
+
+<ParamField body="swiftUIPreviewMode" type="Bool">
+  If `true`, no signals are sent. Auto-detected when `XCODE_RUNNING_FOR_PREVIEWS` environment variable is set. Can be overridden manually.
+</ParamField>
+
+<ParamField body="logHandler" type="LogHandler?">
+  Controls how SDK log messages are handled. Defaults to `.standard(.info)` which uses `OSLog` on supported platforms. Set to `nil` to disable all SDK logging.
+</ParamField>
+
+<ParamField body="metadataEnrichers" type="[SignalEnricher]">
+  An array of `SignalEnricher` implementations that add dynamic parameters to every signal. Defaults to empty.
+</ParamField>
+
+<ParamField body="sessionStatsEnabled" type="Bool">
+  If `true` (default), the SDK tracks basic session statistics using `UserDefaults` for built-in dashboard insights. Set to `false` to opt out.
+</ParamField>
+
+<ParamField body="reservedParameterWarningsEnabled" type="Bool">
+  If `true` (default), the SDK logs warnings when custom parameter keys conflict with reserved TelemetryDeck keys. Set to `false` only when wrapping this SDK in another SDK.
+</ParamField>
+
+## Example
+
+```swift
+let config = TelemetryDeck.Config(
+    appID: "YOUR-APP-ID",
+    salt: "your-random-64-char-salt-string"
+)
+config.defaultUser = currentUser?.email
+config.defaultParameters = {
+    ["App.isPremium": String(StoreManager.shared.isPremium)]
+}
+config.logHandler = nil // disable logging in production
+TelemetryDeck.initialize(config: config)
+```
+
+---
+
+## LogHandler
+
+`LogHandler` is a struct that controls how the SDK emits log messages.
+
+```swift
+public struct LogHandler: Sendable {
+    public init(
+        logLevel: LogHandler.LogLevel,
+        handler: @escaping @Sendable (LogHandler.LogLevel, String) -> Void
+    )
+
+    public static func standard(_ logLevel: LogLevel) -> LogHandler
+}
+```
+
+### LogLevel
+
+```swift
+public enum LogLevel: Int {
+    case debug = 0
+    case info  = 1
+    case error = 2
+}
+```
+
+Messages at or above the configured `logLevel` are forwarded to the handler closure.
+
+### Factory method
+
+`LogHandler.standard(_:)` returns a pre-built handler that writes to `OSLog` on iOS 15+ / macOS 11+ / tvOS 15+ / watchOS 8+, and falls back to `print` on older OS versions.
+
+### Custom log handler
+
+```swift
+// Forward SDK logs to your own logging system
+config.logHandler = LogHandler(logLevel: .error) { level, message in
+    MyLogger.log("[TelemetryDeck] \(message)", severity: level == .error ? .error : .info)
+}
+
+// Disable all SDK logging
+config.logHandler = nil
+```

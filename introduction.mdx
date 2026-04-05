@@ -1,0 +1,51 @@
+---
+title: "Introduction"
+description: "The TelemetryDeck Swift SDK lets you send analytics signals from iOS, macOS, watchOS, tvOS, and visionOS apps — without compromising user privacy."
+---
+
+## What is TelemetryDeck?
+
+TelemetryDeck is a privacy-conscious analytics service for app developers. It lets you understand how users interact with your app — which features they use, how often they launch it, and how they navigate through it — without collecting personally identifiable information.
+
+All user identifiers are hashed on-device before being transmitted. TelemetryDeck never receives raw email addresses, usernames, or device IDs.
+
+## What does the Swift SDK do?
+
+The TelemetryDeck Swift SDK integrates with apps built for Apple platforms. It:
+
+- Collects and sends **signals** (named events) to the TelemetryDeck ingestion API
+- Automatically enriches signals with **platform metadata** (OS version, app version, device model, and more)
+- Manages **sessions** automatically, updating the session identifier when your app returns from background
+- Hashes all **user identifiers** locally before transmission
+
+Current SDK version: **2.12.0**
+
+## Supported platforms
+
+| Platform  | Minimum version |
+|-----------|----------------|
+| iOS       | 12.0+          |
+| macOS     | 10.13+         |
+| watchOS   | 5.0+           |
+| tvOS      | 13.0+          |
+| visionOS  | 1.0+           |
+
+## Key concepts
+
+**Signals**
+A signal is a named event you send to record something that happened in your app — for example, `"App.launchedRegularly"` or `"Settings.opened"`. Signals can carry additional key-value parameters for richer context.
+
+**Parameters**
+Parameters are string key-value pairs attached to a signal. The SDK automatically includes a set of base parameters (OS version, app version, locale, device model, etc.) with every signal. You can add your own custom parameters on a per-signal or global basis.
+
+**Sessions**
+Each SDK instance tracks a session identifier. On iOS, tvOS, and watchOS, the session automatically rotates when your app returns from the background after five or more minutes, or on a cold launch. On macOS and visionOS, a new session is generated each time the app launches.
+
+**User identifiers**
+The SDK generates a device-specific identifier for each user. You can supply your own identifier (such as an email address or username). Either way, the identifier is **SHA-256 hashed on-device** before it is sent. TelemetryDeck never receives the raw value.
+
+## Get started
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Install the SDK, initialize it in your app, and send your first signal in minutes.
+</Card>

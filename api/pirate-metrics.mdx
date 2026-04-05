@@ -1,0 +1,156 @@
+---
+title: "Pirate Metrics API"
+description: "AARRR funnel tracking methods."
+---
+
+These methods send structured signals that map to TelemetryDeck's built-in AARRR dashboard insights. All methods are extensions on the `TelemetryDeck` namespace.
+
+## Acquisition
+
+### acquiredUser(channel:parameters:customUserID:)
+
+```swift
+public static func acquiredUser(
+    channel: String,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Acquisition.userAcquired`. Call when a new user is acquired.
+
+<ParamField body="channel" type="String" required>
+  The acquisition channel. Common values: `"organic"`, `"paid-search"`, `"social-media"`, `"referral"`, `"email"`.
+</ParamField>
+
+### leadStarted(leadID:parameters:customUserID:)
+
+```swift
+public static func leadStarted(
+    leadID: String,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Acquisition.leadStarted`. Call when a lead funnel begins.
+
+<ParamField body="leadID" type="String" required>
+  A unique identifier for this lead. Match with `leadConverted` to track conversion.
+</ParamField>
+
+### leadConverted(leadID:parameters:customUserID:)
+
+```swift
+public static func leadConverted(
+    leadID: String,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Acquisition.leadConverted`. Call when a lead successfully converts.
+
+<ParamField body="leadID" type="String" required>
+  Must match the `leadID` used in `leadStarted`.
+</ParamField>
+
+---
+
+## Activation
+
+### onboardingCompleted(parameters:customUserID:)
+
+```swift
+public static func onboardingCompleted(
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Activation.onboardingCompleted`. Call when a user finishes onboarding.
+
+### coreFeatureUsed(featureName:parameters:customUserID:)
+
+```swift
+public static func coreFeatureUsed(
+    featureName: String,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Activation.coreFeatureUsed`. Call when a user uses a core feature for the first time.
+
+<ParamField body="featureName" type="String" required>
+  The name of the feature (e.g., `"DocumentEditor"`, `"AISearch"`).
+</ParamField>
+
+---
+
+## Referral
+
+### referralSent(receiversCount:kind:parameters:customUserID:)
+
+```swift
+public static func referralSent(
+    receiversCount: Int = 1,
+    kind: String? = nil,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Referral.sent`.
+
+<ParamField body="receiversCount" type="Int">
+  Number of referral recipients. Defaults to `1`.
+</ParamField>
+
+<ParamField body="kind" type="String?">
+  Type of referral (e.g., `"email"`, `"social"`, `"sms"`).
+</ParamField>
+
+### userRatingSubmitted(rating:comment:parameters:customUserID:)
+
+```swift
+public static func userRatingSubmitted(
+    rating: Int,
+    comment: String? = nil,
+    parameters: [String: String] = [:],
+    customUserID: String? = nil
+)
+```
+
+Sends `TelemetryDeck.Referral.userRatingSubmitted`. Rating must be between 0 and 10 inclusive; the SDK logs an error and does nothing if out of range.
+
+<ParamField body="rating" type="Int" required>
+  User rating from 0 to 10.
+</ParamField>
+
+<ParamField body="comment" type="String?">
+  Optional free-text feedback from the user.
+</ParamField>
+
+---
+
+## Revenue
+
+### paywallShown(reason:parameters:customUserID:)
+
+See the [Purchase Tracking API](/api/purchases) page for the full reference. Sends `TelemetryDeck.Revenue.paywallShown`.
+
+---
+
+## Signal reference
+
+| Method | Signal name |
+|--------|-------------|
+| `acquiredUser(channel:)` | `TelemetryDeck.Acquisition.userAcquired` |
+| `leadStarted(leadID:)` | `TelemetryDeck.Acquisition.leadStarted` |
+| `leadConverted(leadID:)` | `TelemetryDeck.Acquisition.leadConverted` |
+| `onboardingCompleted()` | `TelemetryDeck.Activation.onboardingCompleted` |
+| `coreFeatureUsed(featureName:)` | `TelemetryDeck.Activation.coreFeatureUsed` |
+| `referralSent(receiversCount:kind:)` | `TelemetryDeck.Referral.sent` |
+| `userRatingSubmitted(rating:comment:)` | `TelemetryDeck.Referral.userRatingSubmitted` |
+| `paywallShown(reason:)` | `TelemetryDeck.Revenue.paywallShown` |

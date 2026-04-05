@@ -1,0 +1,108 @@
+---
+title: "Navigation API"
+description: "Methods for tracking screen navigation transitions."
+---
+
+TelemetryDeck has built-in support for navigation tracking. All navigation signals are sent as `TelemetryDeck.Navigation.pathChanged` with structured parameters.
+
+## navigationPathChanged(from:to:customUserID:)
+
+```swift
+@MainActor
+public static func navigationPathChanged(
+    from source: String,
+    to destination: String,
+    customUserID: String? = nil
+)
+```
+
+Sends a navigation signal with an explicit source and destination. Also stores the destination for use as the automatic source in the next `navigationPathChanged(to:)` call.
+
+<ParamField body="source" type="String" required>
+  The path the user is leaving. Use `""` for navigation from outside the app.
+</ParamField>
+
+<ParamField body="destination" type="String" required>
+  The path the user is arriving at.
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal.
+</ParamField>
+
+---
+
+## navigationPathChanged(to:customUserID:)
+
+```swift
+@MainActor
+public static func navigationPathChanged(
+    to destination: String,
+    customUserID: String? = nil
+)
+```
+
+Sends a navigation signal using the previously recorded destination as the source. Convenient when you track every screen in your app.
+
+<ParamField body="destination" type="String" required>
+  The path the user is arriving at.
+</ParamField>
+
+<ParamField body="customUserID" type="String?">
+  Overrides the default user identifier for this signal.
+</ParamField>
+
+<Warning>
+  If you don't call this on every screen, the automatically inferred source may be incorrect. For example, if a user visits Home → (untracked) Settings → Profile, TelemetryDeck records Home → Profile, skipping the intermediate step.
+</Warning>
+
+---
+
+## View.trackNavigation(path:)
+
+```swift
+@available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *)
+public func trackNavigation(path: String) -> some View
+```
+
+A SwiftUI view modifier that calls `navigationPathChanged(to:)` automatically when the view appears.
+
+<ParamField body="path" type="String" required>
+  The navigation path identifying this view. Use dot or slash notation for hierarchy.
+</ParamField>
+
+### Example
+
+```swift
+TabView {
+    HomeView()
+        .trackNavigation(path: "home")
+        .tabItem { Text("Home") }
+
+    SettingsView()
+        .trackNavigation(path: "settings")
+        .tabItem { Text("Settings") }
+}
+```
+
+---
+
+## Navigation path conventions
+
+- Use `.` or `/` as hierarchy delimiters: `"settings.account"`, `"/blog/post"`
+- Leading and trailing delimiters are ignored
+- Use `""` (empty string) for the initial navigation from outside the app
+- Keep paths generic — avoid embedding user IDs or dynamic values
+
+---
+
+## Signal parameters
+
+Every navigation signal includes these parameters:
+
+| Parameter | Value |
+|-----------|-------|
+| `TelemetryDeck.Navigation.schemaVersion` | `"1"` |
+| `TelemetryDeck.Navigation.identifier` | `"source -> destination"` |
+| `TelemetryDeck.Navigation.sourcePath` | The source path string |
+| `TelemetryDeck.Navigation.destinationPath` | The destination path string |

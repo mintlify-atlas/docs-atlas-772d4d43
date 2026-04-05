@@ -1,0 +1,92 @@
+---
+title: "Pirate Metrics (AARRR)"
+description: "Built-in signal presets for the AARRR funnel — Acquisition, Activation, Referral, Revenue, and Retention — that map to TelemetryDeck's dashboard insights."
+---
+
+TelemetryDeck includes built-in signal presets for the AARRR framework (also called "Pirate Metrics"): **Acquisition**, **Activation**, **Referral**, **Revenue**, and **Retention**. These signals integrate directly with TelemetryDeck's built-in dashboard insights, giving you a structured view of your growth funnel without manual query setup.
+
+<Tip>
+  Call these signals alongside your own custom signals — they don't replace `TelemetryDeck.signal()`, they complement it with structured data that maps to TelemetryDeck's built-in dashboard insights.
+</Tip>
+
+## Signal presets by category
+
+<Tabs>
+  <Tab title="Acquisition">
+    Track how users are acquired and how leads progress through your funnel.
+
+    ```swift
+    // Track how a user was acquired
+    TelemetryDeck.acquiredUser(channel: "organic-search")
+
+    // Track a lead being started
+    TelemetryDeck.leadStarted(leadID: "lead-abc123")
+
+    // Track a lead converting
+    TelemetryDeck.leadConverted(leadID: "lead-abc123")
+    ```
+
+    Common `channel` values: `"organic"`, `"paid-search"`, `"social-media"`, `"referral"`, `"email"`
+
+    The `leadID` passed to `leadStarted` and `leadConverted` should match so TelemetryDeck can correlate lead starts with conversions.
+  </Tab>
+
+  <Tab title="Activation">
+    Track when users complete key activation milestones such as onboarding or first use of a core feature.
+
+    ```swift
+    // User completed onboarding
+    TelemetryDeck.onboardingCompleted()
+
+    // User used a core feature for the first time
+    TelemetryDeck.coreFeatureUsed(featureName: "DocumentEditor")
+    ```
+
+    Use a consistent `featureName` value across calls so feature usage can be aggregated reliably.
+  </Tab>
+
+  <Tab title="Referral">
+    Track referrals sent by users and collect in-app satisfaction ratings.
+
+    ```swift
+    // User sent a referral to one person
+    TelemetryDeck.referralSent()
+
+    // User sent referrals to multiple people
+    TelemetryDeck.referralSent(receiversCount: 3, kind: "email")
+
+    // User submitted an in-app rating (0–10)
+    TelemetryDeck.userRatingSubmitted(rating: 9, comment: "Love the new editor!")
+    ```
+
+    The `rating` parameter must be between `0` and `10` inclusive. If a value outside this range is passed, the SDK logs an error and does not send the signal.
+
+    Common `kind` values for referrals: `"email"`, `"social"`, `"sms"`, `"link"`
+  </Tab>
+
+  <Tab title="Revenue">
+    Track paywall views as part of your revenue funnel.
+
+    ```swift
+    // User saw a paywall
+    TelemetryDeck.paywallShown(reason: "feature-locked")
+    ```
+
+    For StoreKit purchase signals (`TelemetryDeck.Purchase.completed`, `TelemetryDeck.Purchase.freeTrialStarted`), see the [Purchase Tracking](/presets/purchase-tracking) page.
+  </Tab>
+</Tabs>
+
+## API reference
+
+| Method | Signal sent | Key parameters |
+|--------|-------------|----------------|
+| `acquiredUser(channel:)` | `TelemetryDeck.Acquisition.userAcquired` | `TelemetryDeck.Acquisition.channel` |
+| `leadStarted(leadID:)` | `TelemetryDeck.Acquisition.leadStarted` | `TelemetryDeck.Acquisition.leadID` |
+| `leadConverted(leadID:)` | `TelemetryDeck.Acquisition.leadConverted` | `TelemetryDeck.Acquisition.leadID` |
+| `onboardingCompleted()` | `TelemetryDeck.Activation.onboardingCompleted` | — |
+| `coreFeatureUsed(featureName:)` | `TelemetryDeck.Activation.coreFeatureUsed` | `TelemetryDeck.Activation.featureName` |
+| `referralSent(receiversCount:kind:)` | `TelemetryDeck.Referral.sent` | `TelemetryDeck.Referral.receiversCount`, `TelemetryDeck.Referral.kind` |
+| `userRatingSubmitted(rating:comment:)` | `TelemetryDeck.Referral.userRatingSubmitted` | `TelemetryDeck.Referral.ratingValue`, `TelemetryDeck.Referral.ratingComment` |
+| `paywallShown(reason:)` | `TelemetryDeck.Revenue.paywallShown` | `TelemetryDeck.Revenue.paywallShowReason` |
+
+All methods also accept `parameters: [String: String]` for additional metadata and `customUserID: String?` to override the default user identifier.

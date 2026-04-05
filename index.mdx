@@ -1,97 +1,75 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "TelemetryDeck Swift SDK"
+description: "Privacy-conscious analytics for iOS, macOS, watchOS, tvOS, and visionOS apps. Add telemetry in minutes — no personal data ever leaves the device."
 ---
 
-## Setting up
+The TelemetryDeck Swift SDK lets you send analytics signals from your Apple platform apps to [TelemetryDeck](https://telemetrydeck.com). It's designed to be privacy-first: user identifiers are hashed on-device before transmission, and the SDK never collects personally identifiable information.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install the SDK and send your first signal in under five minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Customize test mode, user identifiers, logging, and more.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Sending Signals" icon="paper-plane" href="/signals/basic-signals">
+    Learn how to send events, attach parameters, and track user actions.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/api/telemetrydeck">
+    Complete reference for every public method and type in the SDK.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## How it works
 
-Everything you need to create world-class documentation.
+TelemetryDeck uses a **signal** model: whenever something notable happens in your app, you send a named signal — optionally with key/value parameters — to the TelemetryDeck ingestion service. Your dashboard then lets you build charts and insights from those signals.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+```swift
+// Initialize once at app startup
+let config = TelemetryDeck.Config(appID: "YOUR-APP-ID")
+TelemetryDeck.initialize(config: config)
 
-## Need inspiration?
+// Send a signal anywhere in your app
+TelemetryDeck.signal("App.launchedRegularly")
+```
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+The SDK batches signals locally and sends them in the background. You never need to manage network requests or caches manually.
+
+## What's included
+
+<CardGroup cols={2}>
+  <Card title="Navigation tracking" icon="map" href="/signals/navigation-tracking">
+    Track screen transitions with a single SwiftUI view modifier or API call.
+  </Card>
+  <Card title="Duration signals" icon="clock" href="/signals/duration-signals">
+    Measure how long users spend on tasks or in features.
+  </Card>
+  <Card title="Error tracking" icon="triangle-exclamation" href="/presets/error-tracking">
+    Report errors with structured categories and messages.
+  </Card>
+  <Card title="Purchase tracking" icon="bag-shopping" href="/presets/purchase-tracking">
+    Track StoreKit transactions, free trials, and paywall views.
+  </Card>
+  <Card title="Pirate metrics" icon="chart-line" href="/presets/pirate-metrics">
+    Built-in AARRR signals for acquisition, activation, referral, and revenue.
+  </Card>
+  <Card title="Signal enrichers" icon="puzzle-piece" href="/advanced/signal-enrichers">
+    Attach dynamic metadata to every signal automatically.
+  </Card>
+</CardGroup>
+
+## Platform support
+
+The SDK supports all major Apple platforms:
+
+| Platform | Minimum version |
+|----------|----------------|
+| iOS      | 12.0           |
+| macOS    | 10.13          |
+| watchOS  | 5.0            |
+| tvOS     | 13.0           |
+| visionOS | 1.0            |
+
+<Note>
+  The SDK requires Swift Package Manager (Xcode 15+ recommended). It is also available via CocoaPods using the `TelemetryDeck` pod.
+</Note>

@@ -1,0 +1,119 @@
+---
+title: "Error Tracking"
+description: "Track errors in your app using TelemetryDeck's built-in signal presets, with structured metadata and flexible error categorization."
+---
+
+TelemetryDeck provides built-in signal presets for error reporting. Errors are sent as `TelemetryDeck.Error.occurred` signals with structured metadata, making them easy to filter and analyze in the TelemetryDeck dashboard.
+
+## Basic error reporting
+
+Report an error by passing a stable string identifier, an optional category, and an optional human-readable message:
+
+```swift
+TelemetryDeck.errorOccurred(
+    id: "NetworkRequest.timeout",
+    category: .appState,
+    message: "Request timed out after 30 seconds"
+)
+```
+
+## Using the IdentifiableError protocol
+
+The SDK defines an `IdentifiableError` protocol. Any type conforming to it provides a stable string `id` that is used as the error identifier when reporting.
+
+You can conform any existing Swift `Error` type on the fly using `.with(id:)`:
+
+```swift
+enum AppError: Error {
+    case networkTimeout
+    case invalidResponse
+}
+
+// Wrap the error with a stable ID and send it
+TelemetryDeck.errorOccurred(
+    identifiableError: AppError.networkTimeout.with(id: "App.networkTimeout"),
+    category: .appState
+)
+```
+
+When using the `identifiableError` overload without an explicit `message`, the error's `localizedDescription` is automatically sent as the message.
+
+## ErrorCategory
+
+The `ErrorCategory` enum categorizes errors for dashboard filtering. Each category corresponds to a built-in TelemetryDeck insight preset.
+
+| Case | Raw value | Description |
+|------|-----------|-------------|
+| `.thrownException` | `"thrown-exception"` | An error thrown as an exception |
+| `.userInput` | `"user-input"` | An error caused by user input |
+| `.appState` | `"app-state"` | An error caused by the application's state |
+
+## What gets sent
+
+Every call to `errorOccurred` sends a `TelemetryDeck.Error.occurred` signal with the following parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `TelemetryDeck.Error.id` | The stable error identifier |
+| `TelemetryDeck.Error.category` | The category raw value (if provided) |
+| `TelemetryDeck.Error.message` | The human-readable error message (if provided) |
+
+## API reference
+
+### `errorOccurred(id:category:message:parameters:floatValue:customUserID:)`
+
+Report an error using a plain string identifier.
+
+<ParamField path="id" type="String" required>
+  Stable identifier for the error type. Use a hierarchical format such as `"Network.timeoutError"`.
+</ParamField>
+
+<ParamField path="category" type="ErrorCategory">
+  Categorizes the error for dashboard filtering. Defaults to `nil`.
+</ParamField>
+
+<ParamField path="message" type="String">
+  Human-readable description of the error. Defaults to `nil`.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Additional metadata to include with the signal. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="floatValue" type="Double">
+  Optional numeric value to attach to the signal. Defaults to `nil`.
+</ParamField>
+
+<ParamField path="customUserID" type="String">
+  Overrides the default user identifier from the SDK configuration. Defaults to `nil`.
+</ParamField>
+
+---
+
+### `errorOccurred(identifiableError:category:parameters:floatValue:customUserID:)`
+
+Report an error using a type that conforms to `IdentifiableError`. The error's `localizedDescription` is automatically sent as the message.
+
+<ParamField path="identifiableError" type="IdentifiableError" required>
+  An error conforming to `IdentifiableError`. Wrap any `Error` with `.with(id:)` to create one on the fly.
+</ParamField>
+
+<ParamField path="category" type="ErrorCategory">
+  Error category. Defaults to `.thrownException`.
+</ParamField>
+
+<ParamField path="parameters" type="[String: String]">
+  Additional metadata to include with the signal. Defaults to an empty dictionary.
+</ParamField>
+
+<ParamField path="floatValue" type="Double">
+  Optional numeric value to attach to the signal. Defaults to `nil`.
+</ParamField>
+
+<ParamField path="customUserID" type="String">
+  Overrides the default user identifier from the SDK configuration. Defaults to `nil`.
+</ParamField>
+
+<Tip>
+  Use stable, hierarchical identifiers like `"Network.timeoutError"` rather than dynamic strings. Avoid including user-specific data in error IDs — identifiers are aggregated across all users in the dashboard.
+</Tip>
